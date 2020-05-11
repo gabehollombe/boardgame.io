@@ -137,12 +137,14 @@ export class Master {
   subscribeCallback: CallbackFn;
   auth: null | AuthFn;
   shouldAuth: typeof doesGameRequireAuthentication;
+  syncSends: boolean = false;
 
   constructor(
     game: Game,
     storageAPI: StorageAPI.Sync | StorageAPI.Async,
     transportAPI,
-    auth?: AuthFn | boolean
+    auth?: AuthFn | boolean,
+    syncSends?: boolean
   ) {
     this.game = ProcessGameConfig(game);
     this.storageAPI = storageAPI;
@@ -150,6 +152,7 @@ export class Master {
     this.auth = null;
     this.subscribeCallback = () => {};
     this.shouldAuth = () => false;
+    this.syncSends = syncSends;
 
     if (auth === true) {
       this.auth = isActionFromAuthenticPlayer;
@@ -271,22 +274,41 @@ export class Master {
       gameID,
     });
 
-    this.transportAPI.sendAll((playerID: string) => {
-      const filteredState = {
-        ...state,
-        G: this.game.playerView(state.G, state.ctx, playerID),
-        deltalog: undefined,
-        _undo: [],
-        _redo: [],
-      };
+    if (this.syncSends) {
+      await this.transportAPI.sendAll((playerID: string) => {
+        const filteredState = {
+          ...state,
+          G: this.game.playerView(state.G, state.ctx, playerID),
+          deltalog: undefined,
+          _undo: [],
+          _redo: [],
+        };
 
-      const log = redactLog(state.deltalog, playerID);
+        const log = redactLog(state.deltalog, playerID);
 
-      return {
-        type: 'update',
-        args: [gameID, filteredState, log],
-      };
-    });
+        return {
+          type: 'update',
+          args: [gameID, filteredState, log],
+        };
+      });
+    } else {
+      this.transportAPI.sendAll((playerID: string) => {
+        const filteredState = {
+          ...state,
+          G: this.game.playerView(state.G, state.ctx, playerID),
+          deltalog: undefined,
+          _undo: [],
+          _redo: [],
+        };
+
+        const log = redactLog(state.deltalog, playerID);
+
+        return {
+          type: 'update',
+          args: [gameID, filteredState, log],
+        };
+      });
+    }
 
     const { deltalog, ...stateWithoutDeltalog } = state;
 
@@ -397,11 +419,19 @@ export class Master {
       initialState,
     };
 
-    this.transportAPI.send({
-      playerID,
-      type: 'sync',
-      args: [gameID, syncInfo],
-    });
+    if (this.syncSends) {
+      await this.transportAPI.send({
+        playerID,
+        type: 'sync',
+        args: [gameID, syncInfo],
+      });
+    } else {
+      this.transportAPI.send({
+        playerID,
+        type: 'sync',
+        args: [gameID, syncInfo],
+      });
+    }
 
     return;
   }

@@ -8,5 +8,6 @@
 
 import { Local } from '../src/client/transport/local';
 import { SocketIO } from '../src/client/transport/socketio';
+import { ApiGateway } from '../src/client/transport/apigw';
 
-export { Local, SocketIO };
+export { Local, SocketIO, ApiGateway };

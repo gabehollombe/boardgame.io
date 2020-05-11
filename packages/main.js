@@ -15,16 +15,20 @@ import { RandomBot } from '../src/ai/random-bot';
 import { MCTSBot } from '../src/ai/mcts-bot';
 import { Local } from '../src/client/transport/local';
 import { SocketIO } from '../src/client/transport/socketio';
+import { ApiGateway } from '../src/client/transport/apigw';
+import { Master } from '../src/master/master';
 
 export {
   Client,
   Local,
+  Master,
   MCTSBot,
   RandomBot,
   ReactClient,
   ReactNativeClient,
   Simulate,
   SocketIO,
+  ApiGateway,
   Step,
   TurnOrder,
 };

@@ -7,5 +7,6 @@
  */
 
 import { Client } from '../src/client/client';
+import { Transport } from '../src/client/transport/transport';
 
-export { Client };
+export { Client, Transport };

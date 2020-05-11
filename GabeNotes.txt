@@ -1,0 +1,52 @@
+Client transport does these actions:
+
+  onAction(state, action) {
+    this.socket.send(
+      JSON.stringify({
+        type: 'update',
+        action,
+        state: state._stateID,
+        gameID: this.gameID,
+        playerID: this.playerID,
+      })
+    );
+  }
+
+    onUpdate({ gameID, state, deltalog }) {
+    const currentState = this.store.getState();
+
+    if (gameID == this.gameID && state._stateID >= currentState._stateID) {
+      const action = ActionCreators.update(state, deltalog);
+      this.store.dispatch(action);
+    }
+  }
+
+
+    this.socket.send(
+      JSON.stringify({
+        type: 'sync',
+        gameID: this.gameID,
+        playerID: this.playerID,
+        numPlayers: this.numPlayers,
+      })
+    );
+
+
+Client listens for messages and does
+
+      const parsed = JSON.parse(event.data);
+      if (parsed.type === 'update') {
+        this.onUpdate(parsed);
+      } else if (parsed.type === 'sync') {
+        this.onSync(parsed);
+      } else {
+        console.error('Not handling', parsed);
+      }
+
+
+
+
+Server inits transport with games
+
+
+Transport needs to be able to send to specific playerId or to all in a game
